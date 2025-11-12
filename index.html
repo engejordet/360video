@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>360 Video Player - Valiant360</title>
+    
+    <!-- Valiant360 control styles -->
+    <link rel="stylesheet" type="text/css" href="valiant360/css/valiant360.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #video-container {
+            width: 100vw;
+            height: 50vw; /* 2:1 aspect ratio (width:height = 2:1) */
+            margin: 0 auto;
+        }
+        
+        /* For screens taller than 2:1 ratio */
+        @media (max-aspect-ratio: 2/1) {
+            #video-container {
+                width: 200vh;
+                height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container" class="valiantPhoto" data-video-src="https://res.cloudinary.com/plyocom/video/upload/v1762963394/POI_anim_2_de4hux.mp4" data-muted="true"></div>
+
+    <!-- jQuery (using a more recent version) -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Three.js -->
+    <script type="text/javascript" src="valiant360/js/three.min.js"></script>
+    <!-- Valiant360 plugin, load after jQuery and Three.js -->
+    <script type="text/javascript" src="valiant360/jquery.valiant360.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#video-container').Valiant360({
+                muted: true,
+                autoplay: true,
+                loop: true,
+                clickAndDrag: true
+            });
+        });
+    </script>
+</body>
+</html>
+
