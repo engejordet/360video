@@ -1,86 +1,191 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>360video — Valiant360 player</title>
-    <style>
-      html,body{height:100%;margin:0;background:#111;color:#eee;font-family:system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
-      .wrap{display:flex;align-items:center;justify-content:center;height:100%;padding:1rem}
-      .player{max-width:1000px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6);background:#000}
-      #container{width:100%;height:560px;background:#000}
-      .note{font-size:0.9rem;margin-top:0.5rem;color:#aaa;text-align:center}
-      @media (max-width:640px){ #container{height:320px} }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <div>
-        <div class="player">
-          <!-- Valiant360 container -->
-          <div id="container"></div>
-        </div>
-        <div class="note">Use mouse/touch to look around. Click the VR button for headset mode (if supported).</div>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>360video — three.js video sphere</title>
+  <style>
+    html,body { height:100%; margin:0; background:#111; color:#eee; font-family:system-ui,Segoe UI,Roboto,Arial; }
+    #root { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    #viewer { width:100%; max-width:1400px; height:720px; background:#000; position:relative; }
+    #message { position:absolute; left:0; right:0; top:12px; text-align:center; color:#ccc; font-size:14px; pointer-events:none; z-index:10 }
+    #fallback { display:none; width:100%; height:100%; object-fit:contain; background:#000; }
+    #controlsHint { position:absolute; left:12px; bottom:12px; color:#aaa; font-size:13px; z-index:10; }
+    button#start { position:absolute; left:50%; transform:translateX(-50%); top:50%; z-index:11; padding:8px 14px; font-size:16px; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="viewer">
+      <div id="message">Drag to look around. Use mouse wheel to zoom. Click the "Start" button if autoplay is blocked.</div>
+      <div id="controlsHint">VR button not needed — this shows a 360 sphere. For headset, use your device's viewer.</div>
+      <canvas id="c"></canvas>
+
+      <!-- invisible video used as texture -->
+      <video id="video" crossOrigin="anonymous" playsinline muted loop style="display:none">
+        <source src="https://res.cloudinary.com/plyocom/video/upload/v1762959673/POI_anim_2_de4hux.mp4" type="video/mp4">
+      </video>
+
+      <!-- fallback visible video if WebGL fails -->
+      <video id="fallback" controls playsinline preload="metadata" crossorigin="anonymous">
+        <source src="https://res.cloudinary.com/plyocom/video/upload/v1762959673/POI_anim_2_de4hux.mp4" type="video/mp4">
+        Your browser does not support <video>.
+      </video>
+
+      <button id="start" aria-hidden="true">Start playback</button>
     </div>
+  </div>
 
-    <!-- Fallback plain video (visible if Valiant360 fails) -->
-    <video id="fallback" controls playsinline preload="metadata" crossorigin="anonymous" style="display:none;width:100%;max-width:1000px;margin:0 auto;">
-      <source src="https://res.cloudinary.com/plyocom/video/upload/v1762959673/POI_anim_2_de4hux.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
+  <!-- three.js as ES module -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 
-    <!-- three.js + Valiant360 (served from the Valiant360 demo site) -->
-    <script src="https://flimshaw.github.io/Valiant360/js/three.min.js"></script>
-    <script src="https://flimshaw.github.io/Valiant360/js/valiant360.min.js"></script>
+    const canvas = document.getElementById('c');
+    const viewer = document.getElementById('viewer');
+    const video = document.getElementById('video');
+    const fallback = document.getElementById('fallback');
+    const startBtn = document.getElementById('start');
+    const message = document.getElementById('message');
 
-    <script>
-      (function(){
-        var videoUrl = 'https://res.cloudinary.com/plyocom/video/upload/v1762959673/POI_anim_2_de4hux.mp4';
+    let renderer, scene, camera, controls, material, sphere;
 
-        // Basic init of Valiant360
-        function initValiant(){
-          try {
-            var player = new Valiant360('#container', {
-              video: videoUrl,
-              is_stereo: false,
-              is_yaw_only: false,
-              is_vr: true,
-              autoplay: true,
-              muted: true,
-              loop: true,
-              debug: false
-            });
+    function showFallback(msg){
+      console.warn('Fallback:', msg);
+      canvas.style.display = 'none';
+      fallback.style.display = '';
+      startBtn.style.display = 'none';
+      message.textContent = msg || 'Using fallback video.';
+    }
 
-            // show fallback video if Valiant360 fails to load within a few seconds
-            var checkTimer = setTimeout(function(){
-              if (!player || !player.playing) {
-                showFallback();
-              }
-            }, 5000);
+    function initThree(){
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(viewer.clientWidth, viewer.clientHeight, false);
 
-            if (player && player.onReady) {
-              player.onReady(function(){ clearTimeout(checkTimer); });
-            }
-          } catch (err){
-            console.error('Valiant360 init error', err);
-            showFallback();
-          }
-        }
+        scene = new THREE.Scene();
 
-        function showFallback(){
-          document.getElementById('container').style.display = 'none';
-          var f = document.getElementById('fallback');
-          f.style.display = 'block';
-          try { f.muted = false; f.play(); } catch(e){}
-        }
+        camera = new THREE.PerspectiveCamera(75, viewer.clientWidth / viewer.clientHeight, 0.1, 1000);
+        camera.position.set(0, 0, 0.1);
 
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-          initValiant();
-        } else {
-          window.addEventListener('DOMContentLoaded', initValiant);
-        }
-      })();
-    </script>
-  </body>
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableZoom = true;
+        controls.enablePan = false;
+        controls.rotateSpeed = -0.25; // invert drag to behave like typical panorama
+        controls.minDistance = 0.01;
+        controls.maxDistance = 1.5;
+        controls.target.set(0,0,0);
+
+        // create sphere geometry with inward-facing normals
+        const geometry = new THREE.SphereBufferGeometry(500, 60, 40);
+        geometry.scale(-1, 1, 1); // flip to inside
+
+        // video texture
+        const texture = new THREE.VideoTexture(video);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.format = THREE.RGBFormat;
+
+        material = new THREE.MeshBasicMaterial({ map: texture });
+
+        sphere = new THREE.Mesh(geometry, material);
+        sphere.frustumCulled = false;
+        sphere.rotation.y = Math.PI; // adjust initial orientation if needed
+
+        scene.add(sphere);
+
+        window.addEventListener('resize', onWindowResize);
+        animate();
+      } catch (err) {
+        showFallback('WebGL init failed: ' + (err && err.message));
+      }
+    }
+
+    function onWindowResize(){
+      const w = viewer.clientWidth;
+      const h = viewer.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    function animate(){
+      requestAnimationFrame(animate);
+      // update controls
+      controls.update();
+      // update texture if needed (VideoTexture updates automatically)
+      renderer.render(scene, camera);
+    }
+
+    // Try autoplay muted; if blocked, show Start button
+    async function tryStartPlayback(){
+      startBtn.style.display = 'none';
+      fallback.style.display = 'none';
+      canvas.style.display = '';
+      message.textContent = 'Loading video...';
+
+      try {
+        // ensure video metadata loads
+        video.muted = true;
+        await video.play();
+        // initialize three once video is playing
+        initThree();
+        message.textContent = 'Drag to look around. Use mouse wheel to zoom.';
+      } catch (err) {
+        // autoplay blocked — show Start button for user gesture
+        console.warn('Autoplay blocked or failed:', err && err.message);
+        startBtn.style.display = '';
+        message.textContent = 'Autoplay blocked — click Start to play.';
+        canvas.style.display = 'none';
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        startBtn.disabled = true;
+        // unmute if desired; keep muted to ensure autoplay in some browsers
+        await video.play();
+        startBtn.style.display = 'none';
+        canvas.style.display = ''; 
+        if (!renderer) initThree();
+      } catch (err) {
+        console.error('Start click play failed:', err);
+        showFallback('Playback failed. Try the fallback player below.');
+      }
+    });
+
+    // detect WebGL support
+    function webglAvailable() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // Entry point
+    (function(){
+      // hide canvas until ready
+      canvas.style.display = 'none';
+      fallback.style.display = 'none';
+      message.textContent = 'Preparing...';
+
+      if (!webglAvailable()) {
+        showFallback('WebGL not supported in this browser.');
+        return;
+      }
+
+      // Try to preload video metadata
+      video.addEventListener('error', function(e){
+        console.error('Video element error', e);
+        showFallback('Video failed to load.');
+      }, {once:true});
+
+      // Attempt autoplay on page load (muted)
+      tryStartPlayback();
+    })();
+  </script>
+</body>
 </html>
