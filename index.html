@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>360video — Player</title>
+    <style>
+      html,body{height:100%;margin:0;background:#111;color:#eee;font-family:system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+      .wrap{display:flex;align-items:center;justify-content:center;height:100%;padding:1rem}
+      .player{max-width:1000px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+      video{width:100%;height:auto;display:block;background:#000}
+      .note{font-size:0.9rem;margin-top:0.5rem;color:#aaa;text-align:center}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div>
+        <div class="player">
+          <video id="video" controls playsinline preload="metadata" crossorigin="anonymous">
+            <source src="https://res.cloudinary.com/plyocom/video/upload/v1762959673/POI_anim_2_de4hux.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="note">If the video doesn't autoplay, click play. Autoplay may be blocked by the browser unless muted.</div>
+      </div>
+    </div>
+    <script>
+      // Try to autoplay muted for modern browsers
+      (function(){
+        const v = document.getElementById('video');
+        function tryAutoplay(){
+          v.muted = true;
+          const playPromise = v.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(()=>{
+              // Autoplay failed — keep controls visible
+              v.muted = false;
+            });
+          }
+        }
+        // Wait a tick to allow browser policies to settle
+        setTimeout(tryAutoplay, 200);
+      })();
+    </script>
+  </body>
+</html>
