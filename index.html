@@ -48,10 +48,273 @@
             height: 0;
         }
 
+        #ui-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            font-family: 'Inter', Arial, sans-serif;
+            color: #1a1f36;
+        }
+
+        #ui-overlay .panel {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            box-shadow: 0 12px 45px rgba(20, 20, 43, 0.25);
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 12px;
+            position: absolute;
+            top: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .top-nav .nav-chip {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: 1px solid rgba(26, 31, 54, 0.08);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 24px rgba(26, 31, 54, 0.18);
+        }
+
+        .top-nav .nav-chip .count {
+            display: inline-block;
+            min-width: 22px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f5132;
+            background: #dcfce7;
+        }
+
+        .filters-button {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: 1px solid rgba(26, 31, 54, 0.08);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 24px rgba(26, 31, 54, 0.12);
+            pointer-events: auto;
+        }
+
+        .filters-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .right-panel {
+            position: absolute;
+            top: 100px;
+            right: 24px;
+            width: 320px;
+            max-height: calc(100vh - 140px);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow: hidden;
+        }
+
+        .right-panel h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .right-panel .inventory-list {
+            overflow-y: auto;
+            padding-right: 4px;
+            max-height: 520px;
+            scrollbar-width: thin;
+        }
+
+        .inventory-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 8px;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.75);
+            border: 1px solid rgba(26,31,54,0.06);
+        }
+
+        .inventory-item .name {
+            font-weight: 600;
+        }
+
+        .inventory-item .price {
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .inventory-item .meta {
+            color: rgba(26,31,54,0.68);
+        }
+
+        .bottom-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .poi-button {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(26,31,54,0.08);
+            background: rgba(255,255,255,0.9);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .date-chip {
+            pointer-events: auto;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(26,31,54,0.08);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .cta-button {
+            pointer-events: auto;
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 32px;
+            border-radius: 16px;
+            background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            box-shadow: 0 20px 45px rgba(124, 58, 237, 0.35);
+        }
+
+        @media (max-width: 1200px) {
+            .right-panel {
+                display: none;
+            }
+        }
+
+
 </style>
 </head>
 <body>
     <div id="video-container" class="valiantPhoto" data-video-src="https://res.cloudinary.com/plyocom/video/upload/v1762963394/POI_anim_2_de4hux.mp4" data-muted="true"></div>
+
+    <div id="ui-overlay">
+        <div class="top-nav">
+            <div class="nav-chip">Project Overview <span class="count">139</span></div>
+            <div class="nav-chip">Step 1 <span class="count">26</span></div>
+            <div class="nav-chip">Step 2 <span class="count">20</span></div>
+            <div class="nav-chip">Step 3 <span class="count">19</span></div>
+            <div class="nav-chip">Step 4 <span class="count">18</span></div>
+            <div class="nav-chip">Step 5 <span class="count">56</span></div>
+        </div>
+
+        <button class="filters-button">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 5.5H16" stroke="#1a1f36" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M6.5 10H13.5" stroke="#1a1f36" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M8.5 14.5H11.5" stroke="#1a1f36" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Filters
+        </button>
+
+        <div class="panel right-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>139 units for sale</h2>
+                <span style="color:rgba(26,31,54,0.6); font-size:12px;">Step 1</span>
+            </div>
+            <div class="inventory-list">
+                <div class="inventory-item">
+                    <span class="name">A301</span>
+                    <span class="price">15,500,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">4</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">A303</span>
+                    <span class="price">9,200,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">3</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">A401</span>
+                    <span class="price">16,000,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">2</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">A602</span>
+                    <span class="price">6,750,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">2</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">A703</span>
+                    <span class="price">19,900,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">4</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">B201</span>
+                    <span class="price">6,700,000</span>
+                    <span class="meta">46m²</span>
+                    <span class="meta">2</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">B208</span>
+                    <span class="price">9,150,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">3</span>
+                </div>
+                <div class="inventory-item">
+                    <span class="name">B401</span>
+                    <span class="price">13,950,000</span>
+                    <span class="meta">m²</span>
+                    <span class="meta">3</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <button class="poi-button">
+                <span>◉</span> Points of Interest
+            </button>
+            <div class="date-chip">1. Jul · 14:00</div>
+        </div>
+
+        <button class="cta-button">Show interest</button>
+    </div>
 
     <!-- jQuery (using a more recent version) -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
